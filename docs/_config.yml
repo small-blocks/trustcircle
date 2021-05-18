@@ -13,6 +13,7 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
+remote_theme: luxedo/jekyll-theme-potato-hacker
 title: jekyll-theme-potato-hacker
 author: "<your_name>"
 email: "<your@mail>"
