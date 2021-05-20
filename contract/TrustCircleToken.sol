@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.5.17;
 
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/interfaces/IBEP20.sol";
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/Context.sol";
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/Ownable.sol";
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/library/SafeMath.sol";
+import "./interfaces/IBEP20.sol";
+import "./Context.sol";
+import "./Ownable.sol";
+import "./library/SafeMath.sol";
 
 contract TrustCircleToken is Context, IBEP20, Ownable {
   using SafeMath for uint256;
