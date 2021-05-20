@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.15.7;
 
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/interfaces/IBEP20.sol";
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/interfaces/ILockFund.sol";
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/Context.sol";
-import "https://github.com/small-blocks/trustcircle/blob/main/contract/library/Math.sol";
+import "./interfaces/IBEP20.sol";
+import "./interfaces/ILockFund.sol";
+import "./Context.sol";
+import "./library/SafeMath.sol";
 
 contract LockFund is Context, Ownable, ILockFund {
   using SafeMath for uint256;
