@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.12;
 
 import "./interfaces/IBEP20.sol";
@@ -24,16 +25,19 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
   mapping (address => HolderNode) private _holders;
   mapping (address => bool) private _excludes;
 
-  string  private _symbol = "TRUST CIRCLE";
-  string  private _name = "TRCI";
+  string  private _name = "TRUST CIRCLE";
+  string  private _symbol = "TRCI";
   uint8   private _decimals = 16;
   uint256 private _totalSupply = 10**15 * 10**16;
 
   uint public immutable _burnRate = 2; // burn 3%
   uint public immutable _rewardRate = 3; // reward is 3%
 
-  // total current bonus tokens
-  uint256 private _totalReward = 0;
+  // total current tokens will be use for give reward
+  uint256 private _totalRewards = 0;
+
+  // used rewards
+  uint256 private _usedRewards = 0;
 
   // total current burn tokens
   uint256 private _burnTotal = 0;
@@ -56,15 +60,14 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
     require(recipient != address(0), "BEP20: transfer to the zero address");
 
     if (!_excludes[recipient]) {
-      balance = _balances[recipient];
-      require(balance.add(amount) <= _maxAmountForEachHolderAddress, "BEP20: the amount sent exceeds the balance of the receiving account");
+      require(_balances[recipient].add(amount) <= _maxAmountForEachHolderAddress, "BEP20: the amount sent exceeds the balance of the receiving account");
     }
     _;
   }
 
-  modifier maxTransactionAmount(address sender, address recipient, uint25 amount) {
+  modifier maxTransactionAmount(address sender, address recipient, uint256 amount) {
     if (!_excludes[sender] || !_excludes[recipient]) {
-      require(amount <= _maxTransactionAmount, "BEP20: you send an amount in excess of the allowed amount is 5000000");
+      require(amount <= _maxTransactionAmount, "BEP20: you send an amount in excess of the allowed amount is 1000000000");
     }
     _;
   }
@@ -72,10 +75,9 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
   constructor() public {
     _balances[msg.sender] = _totalSupply;
 
-    HolderNode holder = new HolderNode(msg.sender, address(0), address(0));
+    _holders[msg.sender] = HolderNode(msg.sender, address(0), address(0));
 
     // init root node , head and tail node
-    _holders[msg.sender] = holder;
     _headNode = msg.sender;
     _tailNode = msg.sender;
     _nextNodeReceiveReward = msg.sender;
@@ -90,42 +92,42 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
   /**
    * @dev Returns the bep token owner.
    */
-  function getOwner() external view returns (address) {
+  function getOwner() external view override returns (address) {
     return owner();
   }
 
   /**
    * @dev Returns the token decimals.
    */
-  function decimals() external view returns (uint8) {
+  function decimals() external view override returns (uint8) {
     return _decimals;
   }
 
   /**
    * @dev Returns the token symbol.
    */
-  function symbol() external view returns (string memory) {
+  function symbol() external view override returns (string memory) {
     return _symbol;
   }
 
   /**
   * @dev Returns the token name.
   */
-  function name() external view returns (string memory) {
+  function name() external view override returns (string memory) {
     return _name;
   }
 
   /**
    * @dev See {BEP20-totalSupply}.
    */
-  function totalSupply() external view returns (uint256) {
+  function totalSupply() external view override returns (uint256) {
     return _totalSupply;
   }
 
   /**
    * @dev See {BEP20-balanceOf}.
    */
-  function balanceOf(address account) external view returns (uint256) {
+  function balanceOf(address account) external view override returns (uint256) {
     return _balances[account];
   }
 
@@ -137,7 +139,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
    * - `recipient` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address recipient, uint256 amount) external returns (bool) {
+  function transfer(address recipient, uint256 amount) external override returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
   }
@@ -145,7 +147,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
   /**
    * @dev See {BEP20-allowance}.
    */
-  function allowance(address owner, address spender) external view returns (uint256) {
+  function allowance(address owner, address spender) external view override returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -156,7 +158,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
    *
    * - `spender` cannot be the zero address.
    */
-  function approve(address spender, uint256 amount) external returns (bool) {
+  function approve(address spender, uint256 amount) external override returns (bool) {
     _approve(_msgSender(), spender, amount);
     return true;
   }
@@ -173,7 +175,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
    * - the caller must have allowance for `sender`'s tokens of at least
    * `amount`.
    */
-  function transferFrom(address sender, address recipient, uint256 amount) external returns (bool) {
+  function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
     _transfer(sender, recipient, amount);
     _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
     return true;
@@ -243,12 +245,12 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
 
     uint256 tranferFee = burnAmount.add(rewardAmount);
     _balances[sender] = _balances[sender].sub(tranferFee, "BEP20: transfer fee exceeds balance");
-      .sub(amount, "BEP20: transfer amount exceeds balance");
+    _balances[sender] = _balances[sender].sub(amount, "BEP20: transfer amount exceeds balance");
 
     _balances[recipient] = _balances[recipient].add(amount);
     
-    _burn(burnAmount);
-    _holdersTotalFees[sender] = _holders[sender].add(tranferFee);
+    _burn(sender, burnAmount);
+    _holdersTotalFees[sender] = _holdersTotalFees[sender].add(tranferFee);
 
     // fetch infor of sender and recipient
     _fetchNode(sender);
@@ -290,7 +292,11 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
     * @dev get amount of token will be used to burn from tranfer amount
     * burn amount will be zero if total amount of tokens is meet maximum
     */
-   function _getBurnAmount(uint256 transferAmount) internal returns(uint256) {
+   function _getBurnAmount(uint256 transferAmount) view internal returns(uint256) {
+      if (_zeroFeeEnabled) {
+        return 0;
+      }
+      
       // burn amount
       uint256 burnAmount = 0;
 
@@ -311,7 +317,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
     * @dev Get amount of token will be used to add to reward pool
     * reward value will be zero if zeroFeeEnabled is True
     */
-   function _getRewardAmount(uint256 transferAmount) internal returns(uint256) {
+   function _getRewardAmount(uint256 transferAmount) view internal returns(uint256) {
       if (_zeroFeeEnabled) {
         return 0;
       }
@@ -320,16 +326,75 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
       return rewardAmount;
    }
 
+   /*
+    * @dev set zero fee status
+    */
+   function setZeroFee(bool enabled) external onlyOwner() {
+      _zeroFeeEnabled = enabled;
+   }
+
+
+   /*
+    * @dev add address to excludes 
+    */
+    function addToExcludes(address addr) external onlyOwner() {
+        require(!_excludes[addr], "excluded address not exists");
+        _excludes[addr] = true;
+        _fetchNode(addr);
+    }
+
+    /*
+     * @dev remove excluded address
+     */
+     function removeExcuded(address addr) external onlyOwner() {
+        require(_excludes[addr], "excluded address not exists");
+        delete _excludes[addr];
+        _fetchNode(addr);
+     }
+
    /**
     * @dev burn by send to dead address
     * return amount of token burned
     */
-   function _burn(uint256 burnAmount) internal {
+   function _burn(address sender, uint256 burnAmount) internal {
       if (burnAmount <= 0) {
         return;
       }
 
       _burnTotal = _burnTotal.add(burnAmount);
+      _totalSupply = _totalSupply.sub(burnAmount);
+      emit Transfer(sender, address(0x000000000000000000000000000000000000dEaD), burnAmount);
+   }
+
+   /*
+    * @dev take out the total tokens burned
+    */
+   function totalBurn() view external returns(uint256) {
+      return _burnTotal;
+   }
+
+   /*
+    * @dev take out the total tokens re
+    */
+   function totalRewards() view external returns(uint256) {
+      return _totalRewards;
+   }
+
+   /*
+    * @dev take out the total used rewards
+    */
+   function totalUsedReward() view external returns(uint256) {
+      return _usedRewards;
+   }
+   
+   /** 
+    * @dev check address not exists in holders list
+    */
+   function _holderExists(address addr) view internal returns(bool) {
+       if (_holders[addr].holder == address(0)) {
+           return false;
+       }
+       return true;
    }
 
    /**
@@ -341,18 +406,18 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
     * Those who do not meet the requirements will be disqualified from the Circle Reward pool
     */
    function _distributeReward(uint256 amount) internal {
-      _totalReward = _totalReward.add(amount);
+      _totalRewards = _totalRewards.add(amount);
 
       // Stop the reward distribution if the account is excluded 
       // Or the total reward remaining is less than 3000
-      if ((_excludes[_nextNodeReceiveReward] && _nextNodeReceiveReward != owner()) || _totalReward < 10**3 * 10**16) {
-        return 0;
+      if ((_excludes[_nextNodeReceiveReward] && _nextNodeReceiveReward != owner()) || _totalRewards < 10**3 * 10**16) {
+        return;
       }
 
       // reinstall the reward node if something goes wrong 
-      if(!_holders[_nextNodeReceiveReward]) {
+      if(!_holderExists(_nextNodeReceiveReward)) {
         _nextNodeReceiveReward = _headNode;
-        return 0;
+        return ;
       }
 
       // Check bonus conditions 
@@ -360,20 +425,23 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
       //    balance is meet minimum requirement
       if (_balances[_nextNodeReceiveReward] < _minimumRequirementToReceiveReward) {
         _removeNode(_nextNodeReceiveReward);
-        return 0;
+        return ;
       }
 
-
-      // calculate reward for this holder
-      // rewardsWillReceived = (balance_of_hodler * 3% * _totalReward) / totalSuppy
-      uint256 rewardsWillReceived = _balances[_nextNodeReceiveReward].mul(_totalReward).mul(3).div(100).div(totalSuppy);
+      // Calculate reward for this holder
+      // The reward received corresponds to the ratio of the amount held to the total supply
+      // rewardsWillReceived = balance_of_hodler * (_totalRewards / totalSuppy)
+      uint256 rewardsWillReceived = _balances[_nextNodeReceiveReward].mul(_totalRewards).div(_totalSupply);
 
       // update remaining reward
-      _totalReward = _totalReward.sub(rewardsWillReceived);
+      _totalRewards = _totalRewards.sub(rewardsWillReceived);
 
       // give reward !
       _balances[_nextNodeReceiveReward] = _balances[_nextNodeReceiveReward].add(rewardsWillReceived);
       _holderTotalReceived[_nextNodeReceiveReward] = _holderTotalReceived[_nextNodeReceiveReward].add(rewardsWillReceived);
+
+      // add to used rewards
+      _usedRewards = _usedRewards.add(rewardsWillReceived);
 
       // move to next node
       if (_nextNodeReceiveReward == _tailNode) {
@@ -384,38 +452,19 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
       }
    }
 
-   /**
-    * @dev get holder by address
-    */
-    function _getHolder(address holderAddr) internal returns(HolderNode) {
-      return _holders[holderAddr];
-    }
-
-   /**
+    /**
     * @dev total transaction fees paid by address
     */
     function holderTotalFees(address addr) view external returns(uint256) {
       return _holdersTotalFees[addr];
     }
-
+    
     /**
      * @dev total number of rewards received by the address
      */
      function holderTotalRewards(address addr) view external returns(uint256) {
       return _holderTotalReceived[addr];
      }
-
-
-   /**
-    * @dev fetch information of holder node
-    */
-    function _fetchNode(address holderAddr) internal {
-      if (_excludes[holderAddr] && holderAddr != owner() || 
-        _balances[holderAddr] < _minimumRequirementToReceiveReward) {
-        _removeNode(holderAddr);
-      }
-
-    }
 
   /**
    * @dev Add new owner if the current address is not ever transaction before
@@ -427,27 +476,22 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
         return;
       }
 
-      HolderNode newNode = new HolderNode(holderAddr, address(0), address(0));
-
-      newNode.previousHoder = _tailNode;
+      _holders[holderAddr] = HolderNode(holderAddr, address(0), address(0));
+      _holders[holderAddr].previousHoder = _tailNode;
       _holders[_tailNode].nextHolder = holderAddr;
-      _holders[holderAddr] = newNode;
       _tailNode = holderAddr;
-
-      emit NewHolder(holder);
+      emit NewHolder(holderAddr);
    }
 
    /**
     * @dev get Holder Node information
     */
-   function getNodeInfomation (address addr) external returns(
+   function getNodeInfomation (address addr) view external onlyOwner() returns(
       address holder, 
-      address nextHolder, 
       address previousHoder,
+      address nextHolder, 
       bool isExcluded) {
-      require(!_holders[addr]);
-      HolderNode holderNode = _holders[addr];
-      return (holderNode.holder, holderNode.previousHoder, holder.nextHolder, _excludes[holder]);
+      return (_holders[addr].holder, _holders[addr].previousHoder, _holders[addr].nextHolder, _excludes[addr]);
    }
 
    /**
@@ -460,10 +504,11 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
         return;
       }
 
-      if(_balances[holderAddr] < _minimumRequirementToReceiveReward) {
+      if((_balances[holderAddr] < _minimumRequirementToReceiveReward) ||
+        _excludes[holderAddr] && holderAddr != owner()) {
           _removeNode(holderAddr);
       }
-      else if(!_holders[holderAddr]) {
+      else if(!_holderExists(holderAddr)) {
           _addNewNode(holderAddr);
       }
     }
@@ -471,12 +516,12 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
    /**
     * @dev remove node
     */
-    function _removeNode(address loser) {
-      if (!_holders[loser]) {
+    function _removeNode(address loser) internal {
+      if (!_holderExists(loser)) {
         return;
       }
 
-      address pAddr = _holders[loser].previousHolder;
+      address pAddr = _holders[loser].previousHoder;
 
       bool isNextReceiveReward = false;
       if (loser == _nextNodeReceiveReward) {
@@ -486,7 +531,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
       // if end node is same with tail node,
       // set tail node to previous node 
       if (loser == _tailNode) {
-          _holder[pAddr].nextHolder = address(0);
+          _holders[pAddr].nextHolder = address(0);
           _tailNode = pAddr;
 
           // move _nextNodeReceiveReward to head node
@@ -496,9 +541,9 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
       }
       // if is middle node, then setup both previous and next node
       else {
-          nAddr = _holders[loser].nextHolder;
-          _holder[pAddr].nextHolder = nAddr;
-          _holder[nAddr].previousHoder = pAddr;
+          address nAddr = _holders[loser].nextHolder;
+          _holders[pAddr].nextHolder = nAddr;
+          _holders[nAddr].previousHoder = pAddr;
 
           // move _nextNodeReceiveReward to next node
           if (isNextReceiveReward) {
@@ -507,6 +552,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
       }
 
       // remove node
-      _holders[loser] = 0;
+      delete _holders[loser];
+      emit NewLoser(loser);
     }
 }

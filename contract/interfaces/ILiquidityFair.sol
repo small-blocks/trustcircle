@@ -5,5 +5,5 @@ interface ILiquidityFair {
 	 * Used when migrating to the new LiquidityFair
 	 * in case of a contract with newer features.
 	 */
-	function migrate(address to) external return(bool);
+	function migrate(address to) external returns(bool);
 }

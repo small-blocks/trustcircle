@@ -21,12 +21,12 @@ interface ILockFund {
 	 /*
 	  * @dev return start lock time and end lock time
 	  */
-	  function lockTime() view external return(uint,uint);
+	  function lockTime() view external returns(uint,uint);
 
 	  /*
 	   * @dev claim to unlock
 	   * The amount of released tokens has been installed from scratch and cannot be edite
 	   * Released tokens will send to beneficiary address
 	   */
-	   function claimUnlock(address) external;
+	   function claimUnlock(address) external returns(uint256);
 }

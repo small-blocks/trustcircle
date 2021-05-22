@@ -47,8 +47,6 @@ contract LiquidityFairV01 is Context, Ownable, ILiquidityFair {
 		_supplyToken2 = token2.balanceOf(address(this));
 
 		require(_totalToken1 > 0 && _totalToken2 > 0, "supply must greater than 0");
-
-		
 	}
 
 	function currentRate() external returns(uint256) {
