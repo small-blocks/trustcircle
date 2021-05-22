@@ -1,4 +1,4 @@
-pragma solidity ^0.15.7;
+pragma solidity ^0.6.12;
 
 interface ILockFund {
 	/*
