@@ -1,2 +1,6 @@
-.DS_Store
-contract/artifacts/
+package.json
+docs/*
+pages/*
+node_modules/*
+out/*
+package-lock.json
