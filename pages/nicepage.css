@@ -33506,6 +33506,14 @@ a.u-link.u-text-hover-grey-90:hover {
         margin-top: 20px;
         margin-bottom: 20px;
         }
+        .u-body
+        {
+        background-image: url("images/default-image.jpg");
+        background-size: cover;
+        background-position: 50% 50%;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        }
         /** common-rules **/
 
         /** publish-rules **/
@@ -33760,7 +33768,7 @@ a.u-link.u-text-hover-grey-90:hover {
   }
 
   .u-header .u-image-1 {
-    width: auto;
+    width: 280px;
   }
 
   .u-header .u-social-icons-1 {
