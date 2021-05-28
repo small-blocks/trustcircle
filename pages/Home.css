@@ -104,8 +104,8 @@
 }
 
 .u-section-3 .u-icon-1 {
-  height: 60px;
-  width: 60px;
+  height: 40px;
+  width: 40px;
   background-image: none;
 }
 
@@ -132,8 +132,8 @@
 }
 
 .u-section-3 .u-icon-2 {
-  height: 60px;
-  width: 60px;
+  height: 40px;
+  width: 40px;
   background-image: none;
 }
 
@@ -160,8 +160,8 @@
 }
 
 .u-section-3 .u-icon-3 {
-  height: 60px;
-  width: 60px;
+  height: 40px;
+  width: 40px;
   background-image: none;
 }
 
@@ -188,8 +188,8 @@
 }
 
 .u-section-3 .u-icon-4 {
-  height: 60px;
-  width: 60px;
+  height: 40px;
+  width: 40px;
   background-image: none;
 }
 
@@ -626,6 +626,8 @@
 
 .u-section-5 .u-btn-1 {
   font-size: 1.25rem;
+  background-image: none;
+  border-style: none;
   margin: 0 auto 0 0;
   padding: 0;
 }
