@@ -19,21 +19,21 @@ interface ILockFund {
 	 */
 	 function totalTokenLocked() view external returns(uint256);
 
-	 /*
-	  * @dev return start lock time and end lock time
-	  */
-	  function lockTime() view external returns(uint,uint);
+	/*
+	* @dev return start lock time and end lock time
+	*/
+	function lockTime() view external returns(uint,uint);
 
-	  /*
-	   * @dev claim to unlock
-	   * The amount of released tokens has been installed from scratch and cannot be edite
-	   * Released tokens will send to beneficiary address
-	   */
-	   function claimUnlock() external returns(uint256);
+	/*
+	* @dev claim to unlock
+	* The amount of released tokens has been installed from scratch and cannot be edite
+	* Released tokens will send to beneficiary address
+	*/
+	function claimUnlock() external returns(uint256);
 
 
-		/*
-		* @dev get back token desposit for charge gas fee
-		*/
-		function getBackTheChange(uint256 amount) external;
+	/*
+	* @dev get back token desposit for charge gas fee
+	*/
+	function getBackTheChange(uint256 amount) external;
 }

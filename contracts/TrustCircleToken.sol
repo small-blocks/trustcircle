@@ -374,7 +374,7 @@ contract TrustCircleToken is Context, IBEP20, Ownable {
    }
 
    /*
-    * @dev take out the total tokens re
+    * @dev take out the total tokens rewards
     */
    function totalRewards() view external returns(uint256) {
       return _totalRewards;
