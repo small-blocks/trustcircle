@@ -1,11 +1,9 @@
 # trustcircle
-Token-oriented project with decentralized governance features with limited number of tokens in each wallet, per transaction, burning mechanism and smart reward distribution mechanism. Everything is completely automatic. There is no manual intervention and can not be interfered by the dev team.
+Token-oriented project with decentralized governance features with a limited number of tokens in each wallet, per transaction. Tokens used in trustcircle Dapp projects
 
 The total supply is 1 000 000 000 000 000.
 "mint" and "_mint" functions is removed so cannot mint more coins.
-5% transaction fee, 2% will be burned directly, 3% used to add to the bonus fund,
-The minimum number of wallets after allocating the supply will be 200 000
-The maximum amount of burning will be 500 000 000 000 000, after which the 2% fee will be eliminated.
+5% transaction fee and will be burned directly
 
 liquidity pool for trustcircle is moved to 75% of supply by dev team, total market value is equivalent to 1USD and locked forever because all liquidity tokens have been deposited by the dev team to a dead wallet address to eliminate rug pull.
 
