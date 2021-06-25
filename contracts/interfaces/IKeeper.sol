@@ -36,4 +36,9 @@ interface IKeeper {
      * @dev on/off claim reward
 	 */
 	function setClaimState(bool state) external;
+
+	/*
+     * @dev compare user password
+	 */
+	function compareUserPass(address userAddress, bytes16 pass) view external returns(bool);
 }
